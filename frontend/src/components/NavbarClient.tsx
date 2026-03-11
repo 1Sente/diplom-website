@@ -4,27 +4,28 @@ import { motion } from "framer-motion";
 import { Menu, X, User, LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
+import { parseCookies, destroyCookie } from "nookies";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function NavbarClient({ initialAuth }: { initialAuth: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(initialAuth);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Initial sync
-    const token = Cookies.get("payload-token");
-    setIsLoggedIn(!!token);
-    
-    // Check when window gets focus
+    // Check auth on mount and path change
     const checkAuth = () => {
-      const currentToken = Cookies.get("payload-token");
-      setIsLoggedIn(!!currentToken);
+      const cookies = parseCookies();
+      const token = cookies["payload-token"];
+      setIsLoggedIn(!!token);
     };
-    window.addEventListener("focus", checkAuth);
 
+    checkAuth();
+  }, [pathname]); // Re-run whenever the route changes
+
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
@@ -32,20 +33,18 @@ export default function NavbarClient({ initialAuth }: { initialAuth: boolean }) 
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("focus", checkAuth);
     };
   }, []);
 
   const handleLogout = async () => {
-    // Вызываем API для логаута, чтобы очистить HttpOnly куки если они есть
     try {
       await fetch('/api/customers/logout', { method: 'POST' });
     } catch (e) {}
-    
-    Cookies.remove("payload-token");
+
+    destroyCookie(null, "payload-token", { path: '/' });
     setIsLoggedIn(false);
-    
-    // Принудительное обновление страницы (лучше чем router.refresh для сброса состояния)
+
+    // Hard reload to clear all states
     window.location.href = '/';
   };
 

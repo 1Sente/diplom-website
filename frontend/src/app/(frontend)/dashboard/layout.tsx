@@ -3,16 +3,19 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { Home, Server, Settings, CreditCard, LogOut } from 'lucide-react';
-import Cookies from 'js-cookie';
+import { destroyCookie } from 'nookies';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
-  const handleLogout = () => {
-    Cookies.remove("payload-token");
-    router.push("/");
-    router.refresh();
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/customers/logout', { method: 'POST' });
+    } catch (e) {}
+
+    destroyCookie(null, "payload-token", { path: '/' });
+    window.location.href = '/';
   };
 
   return (
