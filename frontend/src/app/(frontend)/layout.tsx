@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
-import Navbar from "@/components/Navbar";
+import NavbarClient from "@/components/NavbarClient";
 import ParticleBackground from "@/components/ParticleBackground";
 import CustomCursor from "@/components/CustomCursor";
 import Footer from "@/components/Footer";
+import { cookies } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,11 +22,16 @@ export const metadata: Metadata = {
   description: "Профессиональная разработка современных сайтов и надежный хостинг для вашего бизнеса.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read auth token securely from the server
+  const cookieStore = await cookies();
+  const token = cookieStore.get("payload-token");
+  const isLoggedIn = !!token;
+
   return (
     <html lang="ru" className="scroll-smooth">
       <body
@@ -33,7 +39,7 @@ export default function RootLayout({
       >
         <CustomCursor />
         <ParticleBackground />
-        <Navbar />
+        <NavbarClient initialAuth={isLoggedIn} />
         <main className="flex-grow">
           {children}
         </main>
