@@ -1,8 +1,20 @@
+'use client';
+
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { Home, Server, Settings, CreditCard, LogOut } from 'lucide-react';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    Cookies.remove("payload-token");
+    router.push("/");
+    router.refresh();
+  };
+
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col md:flex-row font-sans text-neutral-100 mt-16 md:mt-20">
       {/* Sidebar */}
@@ -13,7 +25,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         
         <nav className="flex-1 px-4 space-y-2 mt-4">
-          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-neutral-800 text-white transition-colors">
+          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors">
             <Home size={18} />
             <span className="font-medium">Главная</span>
           </Link>
@@ -32,7 +44,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="p-4 mt-auto border-t border-neutral-800">
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg text-red-400 hover:bg-neutral-800 hover:text-red-300 transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg text-red-400 hover:bg-neutral-800 hover:text-red-300 transition-colors"
+          >
             <LogOut size={18} />
             <span className="font-medium">Выйти</span>
           </button>
