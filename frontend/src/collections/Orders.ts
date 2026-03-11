@@ -19,9 +19,21 @@ export const Orders: CollectionConfig = {
       label: 'Сумма (руб)',
     },
     {
+      name: 'type',
+      type: 'select',
+      label: 'Тип операции',
+      options: [
+        { label: 'Пополнение баланса', value: 'topup' },
+        { label: 'Покупка сервера', value: 'purchase' },
+        { label: 'Продление сервера', value: 'renewal' },
+      ],
+      defaultValue: 'topup',
+      required: true,
+    },
+    {
       name: 'status',
       type: 'select',
-      label: 'Статус платежа',
+      label: 'Статус',
       options: [
         { label: 'Ожидает оплаты', value: 'pending' },
         { label: 'Оплачен', value: 'paid' },

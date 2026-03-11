@@ -46,10 +46,26 @@ export const HostingInstances: CollectionConfig = {
         { label: 'Создается', value: 'creating' },
         { label: 'Активен', value: 'active' },
         { label: 'Остановлен', value: 'stopped' },
+        { label: 'Заблокирован (Неуплата)', value: 'suspended' },
+        { label: 'Удален', value: 'deleted' },
         { label: 'Ошибка', value: 'error' },
       ],
       defaultValue: 'creating',
       required: true,
     },
+    {
+      name: 'expiresAt',
+      type: 'date',
+      label: 'Оплачен до (Дата истечения)',
+      admin: {
+        date: { pickerAppearance: 'dayAndTime' }
+      }
+    },
+    {
+      name: 'autoRenew',
+      type: 'checkbox',
+      label: 'Автопродление с баланса',
+      defaultValue: true,
+    }
   ],
 };

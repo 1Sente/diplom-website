@@ -22,5 +22,14 @@ export const Customers: CollectionConfig = {
       type: 'text',
       label: 'Телефон',
     },
+    {
+      name: 'balance',
+      type: 'number',
+      label: 'Баланс (руб)',
+      defaultValue: 0,
+      admin: {
+        description: 'Текущий баланс клиента для оплаты услуг',
+      }
+    }
   ],
 };

@@ -19,20 +19,39 @@ export async function POST(req: Request) {
     
     // В реальном приложении здесь должна быть проверка сессии/токена пользователя
     const body = await req.json();
-    const { customerId, planId, orderId } = body;
+    const { customerId, planId } = body;
 
     if (!customerId || !planId) {
       return NextResponse.json({ error: 'Missing customerId or planId' }, { status: 400 });
     }
 
-    // 1. Получаем данные тарифа
+    // 1. Получаем данные клиента и тарифа
+    const customer = await payload.findByID({
+      collection: 'customers',
+      id: customerId,
+    });
+
     const plan = await payload.findByID({
       collection: 'hosting-plans',
       id: planId,
     });
 
-    if (!plan || !plan.proxmoxTemplateId) {
-      return NextResponse.json({ error: 'Plan not found or missing Proxmox Template ID' }, { status: 400 });
+    if (!customer) {
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    }
+
+    if (!plan || !plan.proxmoxTemplateId || typeof plan.price !== 'number') {
+      return NextResponse.json({ error: 'Plan not found or invalid' }, { status: 400 });
+    }
+
+    // Проверка баланса
+    const currentBalance = customer.balance || 0;
+    if (currentBalance < plan.price) {
+      return NextResponse.json({ 
+        error: 'Insufficient balance', 
+        required: plan.price, 
+        current: currentBalance 
+      }, { status: 402 });
     }
 
     // 2. Ищем свободный IP-адрес
@@ -51,12 +70,34 @@ export async function POST(req: Request) {
     const assignedIp = freeIps.docs[0];
     const password = generatePassword();
 
+    // Списываем средства с баланса
+    await payload.update({
+      collection: 'customers',
+      id: customerId,
+      data: {
+        balance: currentBalance - plan.price,
+      },
+    });
+
+    // Создаем запись об оплате (списание с баланса)
+    await payload.create({
+      collection: 'orders',
+      data: {
+        customer: customerId,
+        amount: plan.price,
+        type: 'purchase',
+        status: 'paid',
+        hostingPlan: planId,
+        yookassaPaymentId: `internal_balance_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Внутренний ID для списания
+      }
+    });
+
     // 3. Создаем запись о сервере в Payload CMS со статусом "creating"
-    // Заранее генерируем VMID (в Proxmox можно брать следующий свободный, но для простоты сгенерируем на базе времени)
-    // Либо Proxmox может сам выдать следующий свободный ID при /cluster/nextid
-    
-    // Временный VMID для записи (позже обновим реальным, если нужно)
     const newVmId = Math.floor(Math.random() * (9000 - 200) + 200); 
+    
+    // Считаем дату истечения (+30 дней)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
     const newInstance = await payload.create({
       collection: 'hosting-instances',
@@ -67,6 +108,8 @@ export async function POST(req: Request) {
         ipAddress: assignedIp.id,
         rootPassword: password,
         status: 'creating',
+        expiresAt: expiresAt.toISOString(),
+        autoRenew: true,
       },
     });
 
@@ -81,14 +124,13 @@ export async function POST(req: Request) {
     });
 
     // 5. Запускаем асинхронный процесс создания сервера в Proxmox
-    // Мы не ждем окончания (await), чтобы быстро вернуть ответ пользователю
     createProxmoxVM(newInstance.id, plan.proxmoxTemplateId, newVmId, `VPS-${newInstance.id}`, assignedIp.ipAddress, password, payload)
       .catch(err => console.error('Failed to create Proxmox VM in background:', err));
 
     return NextResponse.json({ 
       success: true, 
       instanceId: newInstance.id,
-      message: 'Server creation started' 
+      message: 'Server creation started, balance deducted' 
     });
 
   } catch (error: any) {
@@ -104,27 +146,19 @@ async function createProxmoxVM(instanceId: string, templateId: number, vmId: num
     
     console.log(`[Proxmox] Starting clone of template ${templateId} to VM ${vmId}`);
     
-    // 1. Клонирование (это может занять время, в идеале нужно проверять статус таски)
     await proxmoxAPI.cloneVM(templateId, vmId, vmName);
-    
-    // Даем немного времени Proxmox на регистрацию новой ВМ
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     console.log(`[Proxmox] Configuring Cloud-Init for VM ${vmId}`);
-    // 2. Настройка IP и пароля
     await proxmoxAPI.configureCloudInit(vmId, ip, gateway, password);
 
     console.log(`[Proxmox] Starting VM ${vmId}`);
-    // 3. Запуск машины
     await proxmoxAPI.startVM(vmId);
 
-    // 4. Обновляем статус в БД на Активен
     await payload.update({
       collection: 'hosting-instances',
       id: instanceId,
-      data: {
-        status: 'active',
-      },
+      data: { status: 'active' },
     });
     
     console.log(`[Proxmox] VM ${vmId} created and started successfully!`);
@@ -132,13 +166,10 @@ async function createProxmoxVM(instanceId: string, templateId: number, vmId: num
   } catch (error) {
     console.error(`[Proxmox] Error creating VM ${vmId}:`, error);
     
-    // Ставим статус ошибки в БД
     await payload.update({
       collection: 'hosting-instances',
       id: instanceId,
-      data: {
-        status: 'error',
-      },
+      data: { status: 'error' },
     });
   }
 }
