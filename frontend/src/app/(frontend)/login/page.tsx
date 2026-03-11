@@ -29,9 +29,8 @@ export default function LoginPage() {
       const data = await res.json();
       
       if (res.ok && data.success) {
-        // Успешный логин, переходим в дашборд
-        router.push('/dashboard');
-        router.refresh(); // Обновляем данные на клиенте
+        // Force full page reload to ensure Layout and server-side cookies sync perfectly
+        window.location.href = '/dashboard';
       } else {
         setError(data.error || 'Неверный email или пароль');
       }
