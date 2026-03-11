@@ -124,7 +124,7 @@ export async function POST(req: Request) {
     });
 
     // 5. Запускаем асинхронный процесс создания сервера в Proxmox
-    createProxmoxVM(newInstance.id, plan.proxmoxTemplateId, newVmId, `VPS-${newInstance.id}`, assignedIp.ipAddress, password, payload)
+    createProxmoxVM(String(newInstance.id), plan.proxmoxTemplateId, newVmId, `VPS-${newInstance.id}`, assignedIp.ipAddress, password, payload)
       .catch(err => console.error('Failed to create Proxmox VM in background:', err));
 
     return NextResponse.json({ 
