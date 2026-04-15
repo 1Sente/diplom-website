@@ -1,28 +1,77 @@
-import { Server, ArrowRight } from 'lucide-react';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Server, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
+interface ServerInstance {
+  id: string | number;
+  status: string;
+  plan?: { name?: string; price?: number } | string | null;
+  ipAddress?: { ipAddress?: string } | string | null;
+  expiresAt?: string | null;
+  proxmoxVmId?: number;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  creating: 'Создается...',
+  active: 'Активен',
+  stopped: 'Остановлен',
+  suspended: 'Заблокирован',
+  deleted: 'Удален',
+  error: 'Ошибка',
+};
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getIp(ipAddress: ServerInstance['ipAddress']): string {
+  if (!ipAddress) return '—';
+  if (typeof ipAddress === 'object' && ipAddress.ipAddress) return ipAddress.ipAddress;
+  return String(ipAddress);
+}
+
+function getPlanName(plan: ServerInstance['plan']): string {
+  if (!plan) return '—';
+  if (typeof plan === 'object' && plan.name) return plan.name;
+  return String(plan);
+}
+
+function getPlanPrice(plan: ServerInstance['plan']): string | null {
+  if (!plan || typeof plan !== 'object') return null;
+  if (plan.price != null) return `${plan.price} ₽/мес`;
+  return null;
+}
+
 export default function ServersPage() {
-  // Моковые данные для отображения
-  const mockServers = [
-    {
-      id: 1,
-      name: 'VPS-Master (Ubuntu)',
-      ip: '192.168.1.150',
-      status: 'active',
-      plan: 'Start L',
-      price: '500 ₽/мес',
-      nextPayment: '12 апр 2026',
-    },
-    {
-      id: 2,
-      name: 'VPS-Dev (Debian)',
-      ip: '192.168.1.152',
-      status: 'creating',
-      plan: 'Pro L',
-      price: '1200 ₽/мес',
-      nextPayment: '15 апр 2026',
+  const [servers, setServers] = useState<ServerInstance[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadServers() {
+      try {
+        const meRes = await fetch('/api/customers/me', { credentials: 'include' });
+        if (!meRes.ok) return;
+        const meData = await meRes.json();
+        const customer = meData.user ?? meData;
+
+        const res = await fetch(
+          `/api/hosting-instances?where[customer][equals]=${customer.id}&depth=2&limit=100`,
+          { credentials: 'include' }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setServers(data.docs ?? []);
+        }
+      } catch {
+        // тихая ошибка
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    loadServers();
+  }, []);
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -37,55 +86,88 @@ export default function ServersPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 mt-8">
-        {mockServers.map((server) => (
-          <div key={server.id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all hover:border-neutral-700">
-            <div className="flex items-center gap-5">
-              <div className={`w-3 h-3 rounded-full ${server.status === 'active' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-yellow-500 animate-pulse'}`}></div>
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-3">
-                  {server.name}
-                  {server.status === 'creating' && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 font-medium">Создается...</span>}
-                </h3>
-                <div className="flex items-center gap-3 text-sm text-neutral-400 mt-1">
-                  <span>IP: <span className="text-neutral-200">{server.ip}</span></span>
-                  <span>•</span>
-                  <span>Тариф: <span className="text-neutral-200">{server.plan}</span></span>
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-neutral-500 gap-2">
+          <Loader2 className="animate-spin" size={24} />
+          Загрузка...
+        </div>
+      ) : servers.length === 0 ? (
+        <div className="text-center py-12 bg-neutral-900/50 border border-neutral-800 border-dashed rounded-xl mt-8">
+          <Server size={48} className="mx-auto text-neutral-600 mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">У вас пока нет серверов</h3>
+          <p className="text-neutral-400 mb-6">Выберите тариф и запустите свой первый виртуальный сервер</p>
+          <Link href="/#hosting" className="px-5 py-2.5 bg-white text-black font-medium rounded-lg hover:bg-neutral-200 transition-colors">
+            Перейти к тарифам
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 mt-8">
+          {servers.map((server) => (
+            <div key={server.id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all hover:border-neutral-700">
+              <div className="flex items-center gap-5">
+                <div className={`w-3 h-3 rounded-full ${
+                  server.status === 'active'
+                    ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+                    : server.status === 'creating'
+                    ? 'bg-yellow-500 animate-pulse'
+                    : server.status === 'error'
+                    ? 'bg-red-500'
+                    : 'bg-neutral-500'
+                }`} />
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-3">
+                    VPS-{server.proxmoxVmId ?? server.id}
+                    {server.status !== 'active' && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        server.status === 'creating'
+                          ? 'bg-yellow-500/10 text-yellow-500'
+                          : server.status === 'error'
+                          ? 'bg-red-500/10 text-red-400'
+                          : 'bg-neutral-700 text-neutral-400'
+                      }`}>
+                        {STATUS_LABELS[server.status] ?? server.status}
+                      </span>
+                    )}
+                  </h3>
+                  <div className="flex items-center gap-3 text-sm text-neutral-400 mt-1">
+                    <span>IP: <span className="text-neutral-200">{getIp(server.ipAddress)}</span></span>
+                    <span>•</span>
+                    <span>Тариф: <span className="text-neutral-200">{getPlanName(server.plan)}</span></span>
+                    {server.expiresAt && (
+                      <>
+                        <span>•</span>
+                        <span>До: <span className="text-neutral-200">{formatDate(server.expiresAt)}</span></span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-4 border-t md:border-t-0 border-neutral-800 pt-4 md:pt-0">
-              <div className="text-right hidden md:block">
-                <p className="text-white font-medium">{server.price}</p>
-                <p className="text-xs text-neutral-500">Оплата {server.nextPayment}</p>
+              <div className="flex items-center gap-4 border-t md:border-t-0 border-neutral-800 pt-4 md:pt-0">
+                {getPlanPrice(server.plan) && (
+                  <div className="text-right hidden md:block">
+                    <p className="text-white font-medium">{getPlanPrice(server.plan)}</p>
+                    {server.expiresAt && (
+                      <p className="text-xs text-neutral-500">Оплата {formatDate(server.expiresAt)}</p>
+                    )}
+                  </div>
+                )}
+                <Link
+                  href={`/dashboard/servers/${server.id}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
+                    server.status === 'active'
+                      ? 'bg-neutral-800 text-white hover:bg-neutral-700'
+                      : 'bg-neutral-800/50 text-neutral-500 cursor-not-allowed pointer-events-none'
+                  }`}
+                >
+                  Управление
+                  <ArrowRight size={16} />
+                </Link>
               </div>
-              <Link 
-                href={`/dashboard/servers/${server.id}`} 
-                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
-                  server.status === 'active' 
-                    ? 'bg-neutral-800 text-white hover:bg-neutral-700' 
-                    : 'bg-neutral-800/50 text-neutral-500 cursor-not-allowed pointer-events-none'
-                }`}
-              >
-                Управление
-                <ArrowRight size={16} />
-              </Link>
             </div>
-          </div>
-        ))}
-
-        {mockServers.length === 0 && (
-          <div className="text-center py-12 bg-neutral-900/50 border border-neutral-800 border-dashed rounded-xl">
-            <Server size={48} className="mx-auto text-neutral-600 mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">У вас пока нет серверов</h3>
-            <p className="text-neutral-400 mb-6">Выберите тариф и запустите свой первый виртуальный сервер</p>
-            <Link href="/#hosting" className="px-5 py-2.5 bg-white text-black font-medium rounded-lg hover:bg-neutral-200 transition-colors">
-              Перейти к тарифам
-            </Link>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

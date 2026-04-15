@@ -4,24 +4,21 @@ import Link from 'next/link';
 import { ReactNode } from 'react';
 import { Home, Server, Settings, CreditCard, LogOut } from 'lucide-react';
 import { destroyCookie } from 'nookies';
-import { useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
-
   const handleLogout = async () => {
     try {
       await fetch('/api/customers/logout', { method: 'POST' });
     } catch (e) {}
 
-    destroyCookie(null, "payload-token", { path: '/' });
+    destroyCookie(null, "auth-status", { path: '/' });
     window.location.href = '/';
   };
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col md:flex-row font-sans text-neutral-100 mt-16 md:mt-20">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-neutral-900 border-r border-neutral-800 flex flex-col hidden md:flex">
+      <aside className="w-full md:w-64 bg-neutral-900 border-r border-neutral-800 hidden md:flex flex-col">
         <div className="p-6">
           <h2 className="text-xl font-bold text-white tracking-tight">Личный Кабинет</h2>
           <p className="text-sm text-neutral-400 mt-1">Управление услугами</p>

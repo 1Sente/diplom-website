@@ -5,25 +5,20 @@ import { Menu, X, User, LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { parseCookies, destroyCookie } from "nookies";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function NavbarClient({ initialAuth }: { initialAuth: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(initialAuth);
-  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check auth on mount and path change
-    const checkAuth = () => {
-      const cookies = parseCookies();
-      const token = cookies["payload-token"];
-      setIsLoggedIn(!!token);
-    };
-
-    checkAuth();
-  }, [pathname]); // Re-run whenever the route changes
+    // payload-token — httpOnly, недоступна через document.cookie.
+    // Вместо неё читаем не-httpOnly маркер auth-status, который выставляет /api/customers/login.
+    const cookies = parseCookies();
+    setIsLoggedIn(!!cookies["auth-status"]);
+  }, [pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,10 +36,9 @@ export default function NavbarClient({ initialAuth }: { initialAuth: boolean }) 
       await fetch('/api/customers/logout', { method: 'POST' });
     } catch (e) {}
 
-    destroyCookie(null, "payload-token", { path: '/' });
+    destroyCookie(null, "auth-status", { path: '/' });
     setIsLoggedIn(false);
 
-    // Hard reload to clear all states
     window.location.href = '/';
   };
 

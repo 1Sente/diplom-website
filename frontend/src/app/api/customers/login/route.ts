@@ -41,7 +41,16 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7 // 1 неделя
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    // Не-httpOnly маркер — читается клиентом для обновления состояния navbar
+    response.cookies.set('auth-status', '1', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return response;
