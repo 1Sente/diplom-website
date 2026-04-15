@@ -3,15 +3,15 @@
 import { motion } from "framer-motion";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import SpotlightCard from "./SpotlightCard";
 
 const projects = [
   {
     title: "Корпоративный портал FinTech",
     category: "Веб-разработка",
-    image: "bg-gradient-to-br from-blue-900 to-zinc-900", // Плейсхолдер вместо картинки
+    image: "bg-gradient-to-br from-blue-900 to-zinc-900",
     description: "Разработка высоконагруженного портала для финансовой компании с интеграцией внутренних CRM.",
     tags: ["Next.js", "TypeScript", "Tailwind", "PostgreSQL"],
+    href: "/projects",
   },
   {
     title: "E-commerce платформа",
@@ -19,6 +19,7 @@ const projects = [
     image: "bg-gradient-to-br from-emerald-900 to-zinc-900",
     description: "Современный интернет-магазин с умным поиском, личным кабинетом и бонусной системой.",
     tags: ["React", "Node.js", "MongoDB", "Stripe"],
+    href: "/projects",
   },
   {
     title: "SaaS для управления складом",
@@ -26,6 +27,7 @@ const projects = [
     image: "bg-gradient-to-br from-purple-900 to-zinc-900",
     description: "Комплексная система учета товаров с мобильным приложением для сотрудников.",
     tags: ["Vue.js", "Django", "Redis", "Docker"],
+    href: "/projects",
   },
 ];
 
@@ -68,7 +70,7 @@ export default function Portfolio() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project, index) => (
             <motion.div
               key={project.title}
@@ -78,33 +80,30 @@ export default function Portfolio() {
               transition={{ delay: index * 0.1, duration: 0.5 }}
               className="h-full"
             >
-              <SpotlightCard className="h-full rounded-3xl" spotlightColor="rgba(255,255,255,0.08)">
-                <div className="group h-full bg-transparent backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors flex flex-col">
-                  {/* Image Placeholder */}
-                  <div className={`w-full h-64 ${project.image} relative overflow-hidden group-hover:scale-105 transition-transform duration-700 ease-in-out`}>
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-zinc-950/60 backdrop-blur-sm z-10">
-                      <span className="p-3 bg-white/10 rounded-full text-white">
-                        <ExternalLink size={24} />
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-8 flex-grow flex flex-col">
-                    <span className="text-sm font-medium text-blue-400 mb-2 block">{project.category}</span>
-                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">{project.title}</h3>
-                    <p className="text-zinc-400 mb-6 text-sm leading-relaxed flex-grow">
-                      {project.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-auto">
-                      {project.tags.map((tag) => (
-                        <span key={tag} className="text-xs font-medium text-zinc-300 bg-zinc-800/80 px-3 py-1.5 rounded-full border border-zinc-700/50">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+              <Link href={project.href} className="group block h-full rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70 hover:-translate-y-1 hover:border-zinc-600 transition-all duration-200">
+                {/* Превью */}
+                <div className={`w-full h-48 ${project.image} relative overflow-hidden`}>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/40 backdrop-blur-[2px]">
+                    <span className="flex items-center gap-2 text-white text-sm font-medium bg-white/10 border border-white/20 px-4 py-2 rounded-full">
+                      <ExternalLink size={14} />
+                      Смотреть проект
+                    </span>
                   </div>
                 </div>
-              </SpotlightCard>
+
+                <div className="p-6 flex flex-col gap-2">
+                  <span className="text-xs font-medium text-blue-400">{project.category}</span>
+                  <h3 className="text-base font-bold text-white group-hover:text-blue-400 transition-colors">{project.title}</h3>
+                  <p className="text-zinc-500 text-sm leading-relaxed">{project.description}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {project.tags.map((tag) => (
+                      <span key={tag} className="text-xs text-zinc-400 bg-zinc-800 px-2.5 py-1 rounded-md">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </Link>
             </motion.div>
           ))}
         </div>
