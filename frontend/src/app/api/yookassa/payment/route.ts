@@ -28,18 +28,21 @@ export async function POST(req: Request) {
     const secretKey = process.env.YOOKASSA_SECRET_KEY;
 
     if (!shopId || !secretKey) {
-      console.error('YooKassa credentials are not configured');
-      return NextResponse.json({ error: 'Payment gateway error' }, { status: 500 });
+      console.error('YooKassa: YOOKASSA_SHOP_ID и YOOKASSA_SECRET_KEY не заданы в .env');
+      return NextResponse.json({ error: 'Платёжный шлюз не настроен. Обратитесь к администратору.' }, { status: 500 });
     }
 
     const checkout = new YooCheckout({ shopId, secretKey });
 
     const idempotenceKey = `topup_${customerId}_${Date.now()}`;
 
+    // YooKassa требует сумму в формате "500.00" (две десятичные)
+    const amountValue = parseFloat(amount).toFixed(2);
+
     // Создаем платеж в YooKassa
     const payment = await checkout.createPayment({
       amount: {
-        value: amount.toString(),
+        value: amountValue,
         currency: 'RUB'
       },
       confirmation: {

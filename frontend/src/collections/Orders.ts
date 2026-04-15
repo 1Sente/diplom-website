@@ -47,7 +47,6 @@ export const Orders: CollectionConfig = {
       type: 'text',
       label: 'ID платежа YooKassa',
       unique: true,
-      required: true,
     },
     {
       name: 'hostingPlan',
