@@ -3,7 +3,6 @@ import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import path from 'path';
 
-// Import all collections
 import { Users } from './collections/Users';
 import { Customers } from './collections/Customers';
 import { Services } from './collections/Services';
@@ -19,6 +18,17 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.resolve(proc
 export default buildConfig({
   admin: {
     user: Users.slug,
+    meta: {
+      titleSuffix: '— NEXUS Admin',
+      description: 'Панель управления NEXUS — серверы, клиенты, биллинг.',
+    },
+    theme: 'dark',
+    components: {
+      graphics: {
+        Logo: '@/components/payload/AdminLogo',
+        Icon: '@/components/payload/AdminIcon',
+      },
+    },
     importMap: {
       baseDir: dirname,
     },

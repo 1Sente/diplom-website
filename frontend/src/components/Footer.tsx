@@ -1,80 +1,115 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin, Github, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, Github, Send } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-neutral-950 border-t border-neutral-900 pt-16 pb-8 relative z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Brand & About */}
-          <div className="space-y-4">
+    <footer className="relative bg-zinc-950 border-t border-zinc-900 pt-16 pb-8 z-10 overflow-hidden">
+
+      {/* Декоративный фоновый орб */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full bg-blue-600/5 blur-[80px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
+
+          {/* Brand */}
+          <div className="space-y-4 lg:col-span-1">
             <Link href="/" className="text-3xl font-black tracking-tighter block">
               <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                 NEXUS
               </span>
             </Link>
             <p className="text-neutral-400 text-sm leading-relaxed">
-              Мы создаем современные веб-приложения и предоставляем надежный облачный хостинг для вашего бизнеса. Полный цикл от идеи до продакшена.
+              Создаем современные веб-приложения и предоставляем надежный облачный хостинг для вашего бизнеса.
             </p>
-            <div className="flex gap-4 pt-2">
-              <a href="#" className="w-10 h-10 rounded-full bg-neutral-900 flex items-center justify-center text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors">
-                <Github size={18} />
+            <div className="flex gap-3 pt-1">
+              <a href="#" className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-neutral-400 hover:border-zinc-600 hover:text-white transition-all">
+                <Github size={16} />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-neutral-900 flex items-center justify-center text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors">
-                <Twitter size={18} />
+              <a href="#" className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-neutral-400 hover:border-zinc-600 hover:text-white transition-all">
+                <Send size={16} />
               </a>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Навигация */}
           <div>
-            <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Навигация</h3>
+            <h3 className="text-white font-semibold mb-5 text-sm tracking-wider uppercase">Навигация</h3>
             <ul className="space-y-3">
-              <li><Link href="/#services" className="text-neutral-400 hover:text-white transition-colors text-sm">Услуги разработки</Link></li>
-              <li><Link href="/#hosting" className="text-neutral-400 hover:text-white transition-colors text-sm">Тарифы хостинга</Link></li>
-              <li><Link href="/#portfolio" className="text-neutral-400 hover:text-white transition-colors text-sm">Наши проекты</Link></li>
-              <li><Link href="/dashboard" className="text-neutral-400 hover:text-white transition-colors text-sm">Личный кабинет</Link></li>
+              {[
+                { label: "Услуги разработки", href: "/#services" },
+                { label: "Тарифы хостинга", href: "/#hosting" },
+                { label: "Наши проекты", href: "/#portfolio" },
+                { label: "Личный кабинет", href: "/dashboard" },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-neutral-500 hover:text-white transition-colors text-sm">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Документы */}
           <div>
-            <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Документы</h3>
+            <h3 className="text-white font-semibold mb-5 text-sm tracking-wider uppercase">Документы</h3>
             <ul className="space-y-3">
-              <li><Link href="/privacy" className="text-neutral-400 hover:text-white transition-colors text-sm">Политика конфиденциальности</Link></li>
-              <li><Link href="/terms" className="text-neutral-400 hover:text-white transition-colors text-sm">Договор оферты</Link></li>
-              <li><Link href="/sla" className="text-neutral-400 hover:text-white transition-colors text-sm">Уровень обслуживания (SLA)</Link></li>
+              {[
+                { label: "Политика конфиденциальности", href: "/privacy" },
+                { label: "Договор оферты", href: "/terms" },
+                { label: "Уровень обслуживания (SLA)", href: "/sla" },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-neutral-500 hover:text-white transition-colors text-sm">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contacts */}
+          {/* Контакты */}
           <div>
-            <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Контакты</h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3 text-sm text-neutral-400">
-                <Mail size={18} className="text-blue-500 mt-0.5" />
-                <a href="mailto:hello@nexus.ru" className="hover:text-white transition-colors">hello@nexus.ru</a>
+            <h3 className="text-white font-semibold mb-5 text-sm tracking-wider uppercase">Контакты</h3>
+            <ul className="space-y-3.5">
+              <li>
+                <a href="mailto:hello@nexus.ru" className="flex items-start gap-3 text-sm text-neutral-500 hover:text-white transition-colors group">
+                  <div className="w-7 h-7 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-500/20 transition-colors">
+                    <Mail size={13} className="text-blue-400" />
+                  </div>
+                  hello@nexus.ru
+                </a>
               </li>
-              <li className="flex items-start gap-3 text-sm text-neutral-400">
-                <Phone size={18} className="text-purple-500 mt-0.5" />
-                <a href="tel:+78000000000" className="hover:text-white transition-colors">+7 (800) 000-00-00</a>
+              <li>
+                <a href="tel:+78000000000" className="flex items-start gap-3 text-sm text-neutral-500 hover:text-white transition-colors group">
+                  <div className="w-7 h-7 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-purple-500/20 transition-colors">
+                    <Phone size={13} className="text-purple-400" />
+                  </div>
+                  +7 (800) 000-00-00
+                </a>
               </li>
-              <li className="flex items-start gap-3 text-sm text-neutral-400">
-                <MapPin size={18} className="text-pink-500 mt-0.5" />
-                <span>г. Москва, ул. Примерная, д. 1, офис 101</span>
+              <li className="flex items-start gap-3 text-sm text-neutral-500">
+                <div className="w-7 h-7 rounded-md bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin size={13} className="text-pink-400" />
+                </div>
+                г. Москва, ул. Примерная, д. 1
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-neutral-900 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-neutral-500 text-sm">
-            © {new Date().getFullYear()} Индивидуальный Предприниматель. Все права защищены.
+        {/* Нижняя полоса */}
+        <div className="border-t border-zinc-900 pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
+          <p className="text-neutral-600 text-sm">
+            © {new Date().getFullYear()} NEXUS. Индивидуальный Предприниматель. Все права защищены.
           </p>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            <span className="text-neutral-400 text-sm font-medium">Все системы работают</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-50"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span className="text-neutral-500 text-sm">Все системы работают</span>
           </div>
         </div>
 
