@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Code2, Smartphone, MonitorPlay, Database, LayoutTemplate, ShieldCheck, ArrowRight, X, Check } from "lucide-react";
-import SpotlightCard from "./SpotlightCard";
 import { useState } from "react";
 
 const services = [
@@ -289,23 +288,21 @@ export default function Services() {
             {services.map((service) => {
               const Icon = service.icon;
               return (
-                <motion.div key={service.title} variants={itemVariants} className="border-glow-animated rounded-2xl">
-                  <SpotlightCard className="h-full rounded-2xl" spotlightColor={service.glow}>
-                    <div className="glass rounded-2xl p-7 border border-zinc-800/60 hover:border-zinc-700/50 transition-all duration-300 group h-full flex flex-col">
-                      <div className={`mb-5 w-14 h-14 rounded-xl ${service.bg} border ${service.border} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className={`w-7 h-7 ${service.color}`} />
-                      </div>
-                      <h3 className="text-lg font-bold text-white mb-2.5">{service.title}</h3>
-                      <p className="text-zinc-400 text-sm leading-relaxed flex-grow">{service.description}</p>
-                      <button
-                        onClick={() => setActiveService(service)}
-                        className={`mt-5 flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all ${service.buttonColor}`}
-                      >
-                        Узнать подробнее
-                        <ArrowRight size={14} />
-                      </button>
+                <motion.div key={service.title} variants={itemVariants}>
+                  <div className="rounded-2xl p-7 border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70 hover:-translate-y-1 hover:border-zinc-600 transition-all duration-200 group h-full flex flex-col">
+                    <div className={`mb-5 w-12 h-12 rounded-xl ${service.bg} border ${service.border} flex items-center justify-center`}>
+                      <Icon className={`w-6 h-6 ${service.color}`} />
                     </div>
-                  </SpotlightCard>
+                    <h3 className="text-base font-bold text-white mb-2">{service.title}</h3>
+                    <p className="text-zinc-500 text-sm leading-relaxed flex-grow">{service.description}</p>
+                    <button
+                      onClick={() => setActiveService(service)}
+                      className="mt-5 flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors group/btn"
+                    >
+                      Узнать подробнее
+                      <ArrowRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
+                    </button>
+                  </div>
                 </motion.div>
               );
             })}
