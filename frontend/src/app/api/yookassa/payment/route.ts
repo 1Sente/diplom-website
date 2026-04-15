@@ -47,7 +47,8 @@ export async function POST(req: Request) {
       },
       confirmation: {
         type: 'redirect',
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/billing?status=success`
+        // paymentId добавляется после создания платежа — передаём customerId для резервной проверки
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/billing?status=success&customerId=${customerId}`
       },
       capture: true,
       description: `Пополнение баланса Личного Кабинета для ${customer.email || 'клиента'}`,

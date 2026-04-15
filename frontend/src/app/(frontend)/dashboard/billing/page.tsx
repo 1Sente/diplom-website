@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CreditCard, ArrowUpRight, History, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface Order {
@@ -35,33 +36,58 @@ export default function BillingPage() {
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const searchParams = useSearchParams();
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const meRes = await fetch('/api/customers/me', { credentials: 'include' });
-        if (!meRes.ok) return;
-        const meData = await meRes.json();
-        const customer = meData.user ?? meData;
-        setBalance(customer.balance ?? 0);
-        setCustomerId(String(customer.id));
+  const loadData = useCallback(async () => {
+    try {
+      const meRes = await fetch('/api/customers/me', { credentials: 'include' });
+      if (!meRes.ok) return;
+      const meData = await meRes.json();
+      const customer = meData.user ?? meData;
+      setBalance(customer.balance ?? 0);
+      setCustomerId(String(customer.id));
 
-        const ordersRes = await fetch(
-          `/api/orders?where[customer][equals]=${customer.id}&sort=-createdAt&limit=20`,
-          { credentials: 'include' }
-        );
-        if (ordersRes.ok) {
-          const ordersData = await ordersRes.json();
-          setOrders(ordersData.docs ?? []);
-        }
-      } catch {
-        // Не показываем ошибку загрузки — страница просто остаётся пустой
-      } finally {
-        setDataLoading(false);
+      const ordersRes = await fetch(
+        `/api/orders?where[customer][equals]=${customer.id}&sort=-createdAt&limit=20`,
+        { credentials: 'include' }
+      );
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        setOrders(ordersData.docs ?? []);
       }
+    } catch {
+      // тихая ошибка
+    } finally {
+      setDataLoading(false);
     }
-    loadData();
   }, []);
+
+  // Начальная загрузка
+  useEffect(() => { loadData(); }, [loadData]);
+
+  // Возврат с YooKassa — проверяем и зачисляем платёж
+  useEffect(() => {
+    const status = searchParams.get('status');
+    const cidFromUrl = searchParams.get('customerId');
+    if (status !== 'success' || !cidFromUrl) return;
+
+    // Убираем параметры из URL без перезагрузки
+    window.history.replaceState({}, '', '/dashboard/billing');
+
+    setPaymentSuccess(true);
+
+    // Вызываем резервную проверку (на случай если вебхук не дошёл)
+    fetch('/api/yookassa/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId: cidFromUrl }),
+      credentials: 'include',
+    }).finally(() => {
+      // Перезагружаем баланс и историю после зачисления
+      setTimeout(() => loadData(), 500);
+    });
+  }, [searchParams, loadData]);
 
   const handleTopup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +124,13 @@ export default function BillingPage() {
         <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Биллинг и Баланс</h1>
         <p className="text-neutral-400">Управляйте средствами на вашем счете для автоматического продления серверов.</p>
       </div>
+
+      {paymentSuccess && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
+          <CheckCircle2 size={18} className="shrink-0" />
+          Оплата прошла успешно! Баланс обновляется...
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
 
